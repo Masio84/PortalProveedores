@@ -14,11 +14,19 @@ async function cargarNav() {
         const html = await response.text();
         document.getElementById('nav-placeholder').innerHTML = html;
         setTimeout(() => {
-            if (typeof Flowbite !== 'undefined' && Flowbite.init) {
-                Flowbite.init();
-            }
-            actualizarDatosDropdown();
-        }, 100);
+           if (typeof Flowbite !== 'undefined' && Flowbite.init) {
+        Flowbite.init();
+    }
+    // Manejar clic en logo para cargar dashboard
+    const logoLink = document.getElementById('logoLink');
+    if (logoLink) {
+        logoLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            cargarModulo('dashboard');
+        });
+    }
+    actualizarDatosDropdown();
+}, 100);
     } catch (error) {
         console.error('Error cargando la navegación:', error);
     }
@@ -79,11 +87,7 @@ function configurarMenu(rol) {
     switch(rol) {
         case 'Ofertante':
             menuItems = [
-                { nombre: 'Mi Perfil', icono: 'fa-user', id: 'perfil' },
-                { nombre: 'Registrar Solicitud', icono: 'fa-file-signature', id: 'solicitud' },
-                { nombre: 'Mis Solicitudes', icono: 'fa-folder-open', id: 'mis_solicitudes' },
-                { nombre: 'Documentos', icono: 'fa-file-alt', id: 'documentos' },
-                { nombre: 'Sourcing', icono: 'fa-search', id: 'sourcing' },
+                { nombre: 'Sourcing', icono: 'fa-search', id: 'perfil' },
                 { nombre: 'Automatización', icono: 'fa-robot', id: 'automatizacion' },
                 { nombre: 'Concierge', icono: 'fa-concierge-bell', id: 'concierge' },
                 { nombre: 'Legal', icono: 'fa-gavel', id: 'legal' },
@@ -97,12 +101,7 @@ function configurarMenu(rol) {
             break;
         case 'institucion_publica':
             menuItems = [
-                { nombre: 'Mi Perfil', icono: 'fa-user', id: 'perfil' },
-                { nombre: 'Dashboard', icono: 'fa-chart-line', id: 'dashboard' },
-                { nombre: 'Revisar Solicitudes', icono: 'fa-clipboard-list', id: 'revisar' },
-                { nombre: 'Contratos Activos', icono: 'fa-file-contract', id: 'contratos' },
-                { nombre: 'Estadísticas', icono: 'fa-chart-bar', id: 'estadisticas' },
-                { nombre: 'Sourcing', icono: 'fa-search', id: 'sourcing' },
+                { nombre: 'Sourcing', icono: 'fa-search', id: 'perfil' },
                 { nombre: 'Automatización', icono: 'fa-robot', id: 'automatizacion' },
                 { nombre: 'Concierge', icono: 'fa-concierge-bell', id: 'concierge' },
                 { nombre: 'Financiamiento', icono: 'fa-coins', id: 'financiamiento' },
@@ -502,29 +501,70 @@ function generarTablaActividades(num, datos = []) {
         return;
     }
     let html = `<table class="min-w-full border text-sm">
-        <thead class="bg-gray-100"><tr><th class="border p-2">Actividad</th><th class="border p-2">%</th><th class="border p-2">Fecha Inicio</th></tr></thead><tbody>`;
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="border p-2">Actividad</th>
+                <th class="border p-2">%</th>
+                <th class="border p-2">Fecha Inicio</th>
+                <th class="border p-2">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>`;
     for (let i = 0; i < num; i++) {
         const act = datos[i] || {};
-        html += `<tr>
-            <td class="border p-1"><input type="text" name="actividad[]" value="${act.actividad || ''}" class="w-full border rounded px-2 py-1" required></td>
+        // Se requiere el ID para poder eliminar; si es nuevo se deja vacío
+        const id = act.id || 0;
+        html += `<tr data-id="${id}">
+            <td class="border p-1">
+                <input type="text" name="actividad[]" value="${act.actividad || ''}" class="w-full border rounded px-2 py-1" required>
+                <input type="hidden" name="actividad_id[]" value="${id}">
+            </td>
             <td class="border p-1"><input type="number" step="0.01" min="0" max="100" name="porcentaje[]" value="${act.porcentaje || ''}" class="w-full border rounded px-2 py-1"></td>
             <td class="border p-1"><input type="date" name="fecha_inicio[]" value="${act.fecha_inicio || ''}" class="w-full border rounded px-2 py-1" required></td>
+            <td class="border p-1 text-center">
+                ${id > 0 ? `<button type="button" onclick="eliminarActividad(${id})" class="text-red-600 hover:underline"><i class="fas fa-trash-alt"></i> Eliminar</button>` : '-'}
+            </td>
         </tr>`;
     }
     html += '</tbody></table>';
     container.innerHTML = html;
 }
 
+window.eliminarActividad = async function(id) {
+    if (!confirm('¿Estás seguro de eliminar esta actividad económica?')) return;
+    if (!proveedorIdActual) {
+        alert('Primero guarda los datos generales del proveedor');
+        return;
+    }
+    const formData = new FormData();
+    formData.append('id', id);
+    formData.append('proveedor_id', proveedorIdActual);
+    try {
+        const resp = await fetch('delete_actividad.php', { method: 'POST', body: formData });
+        const data = await resp.json();
+        if (data.success) {
+            cargarActividadesExistentes(proveedorIdActual); // Recargar tabla actualizada
+        } else {
+            alert(data.message);
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Error de conexión al eliminar la actividad');
+    }
+};
+
 async function guardarActividades(proveedorId) {
     const actividades = [];
     const filas = document.querySelectorAll('#actividadesContainer tbody tr');
     filas.forEach(fila => {
-        const inputs = fila.querySelectorAll('input');
-        if (inputs.length >= 3) {
+        const actInput = fila.querySelector('[name="actividad[]"]');
+        const porInput = fila.querySelector('[name="porcentaje[]"]');
+        const fecInput = fila.querySelector('[name="fecha_inicio[]"]');
+        if (actInput && porInput && fecInput) {
             actividades.push({
-                actividad: inputs[0].value,
-                porcentaje: inputs[1].value,
-                fecha_inicio: inputs[2].value
+                actividad: actInput.value,
+                porcentaje: porInput.value,
+                fecha_inicio: fecInput.value
             });
         }
     });

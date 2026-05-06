@@ -26,8 +26,8 @@ if (!$proveedor_id || empty($nombre) || empty($curp) || empty($ine)) {
 
 $conn = getConnection();
 
-// Verificar unicidad de CURP e INE (excluyendo el registro actual si es edición)
-$sqlCheck = "SELECT id FROM accionistas WHERE (curp = ? OR ine = ?)";
+// Verificar unicidad de CURP e INE solo en registros ACTIVOS (sin fecha_baja)
+$sqlCheck = "SELECT id FROM accionistas WHERE (curp = ? OR ine = ?) AND fecha_baja IS NULL";
 $params = [$curp, $ine];
 $types = "ss";
 if ($accionista_id > 0) {
@@ -40,7 +40,7 @@ $stmtCheck->bind_param($types, ...$params);
 $stmtCheck->execute();
 $resultCheck = $stmtCheck->get_result();
 if ($resultCheck->num_rows > 0) {
-    echo json_encode(['success' => false, 'message' => 'La CURP o el número de INE ya están registrados en el sistema.']);
+    echo json_encode(['success' => false, 'message' => 'La CURP o el número de INE ya están registrados en un accionista activo.']);
     $stmtCheck->close();
     $conn->close();
     exit;

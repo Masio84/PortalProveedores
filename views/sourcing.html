@@ -1,13 +1,110 @@
 <div>
-  <h2 class="text-2xl font-bold text-[#0b3b5b] mb-4">Sourcing</h2>
-  <p class="text-gray-600">Gestión de admisión y evaluación de Ofertantes.</p>
-  <div class="mt-4 p-4 bg-gray-50 rounded">
-    <div class="flex items-center justify-center p-8">
-      <i class="fas fa-search text-4xl text-[#0b3b5b] mr-4"></i>
-      <div>
-        <h3 class="font-bold text-lg">Módulo Sourcing</h3>
-        <p class="text-gray-600 mt-2">Funcionalidad en desarrollo. Próximamente disponible. 99999999999999999999999999999999999</p>
+  <h2 class="text-2xl font-bold text-[#0b3b5b] mb-4">Mi Perfil</h2>
+
+  <!-- Contenedor para ofertantes -->
+  <div id="ofertante-section" style="display: none;">
+    <div class="mb-6">
+      <label class="block text-gray-700 font-medium mb-2">Tipo de proveedor:</label>
+      <select id="tipoProveedor" class="border rounded px-3 py-2 w-64">
+        <option value="">-- Selecciona --</option>
+        <option value="fisica_empresarial">Persona Física con Actividad Empresarial</option>
+        <option value="moral">Persona Moral</option>
+      </select>
+    </div>
+
+    <form id="proveedorForm" class="space-y-4">
+      <!-- Campos del proveedor (se generan dinámicamente) -->
+      <div id="formCampos"></div>
+
+      <!-- Sección Actividades Económicas -->
+      <div id="actividades-section" style="display: none;" class="mt-6 border-t pt-4">
+        <h3 class="text-lg font-bold text-[#0b3b5b] mb-3">Actividades Económicas (Conforme a constancia de situación fiscal vigente)</h3>
+        <div class="mb-3">
+          <label class="block text-gray-700 mb-1">Número de actividades a registrar:</label>
+          <input type="number" id="numActividades" min="0" max="20" value="0" class="border rounded px-3 py-1 w-24">
+          <button type="button" id="generarActividades" class="ml-2 bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">Generar campos</button>
+        </div>
+        <div id="actividadesContainer" class="overflow-x-auto">
+          <!-- Tabla generada dinámicamente -->
+        </div>
+      </div>
+
+      <!-- Sección Relación de Accionistas (solo moral) -->
+      <div id="accionistas-section" style="display: none;" class="mt-6 border-t pt-4">
+        <h3 class="text-lg font-bold text-[#0b3b5b] mb-3">Relación de Accionistas</h3>
+        <div id="accionistasTableContainer" class="overflow-x-auto"></div>
+        <button type="button" id="btnAgregarAccionista" class="mt-3 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+          <i class="fas fa-plus"></i> Agregar Accionista
+        </button>
+      </div>
+
+      <div class="flex gap-4 mt-4">
+        <button type="submit" class="bg-[#0b3b5b] text-white px-6 py-2 rounded hover:bg-[#0f4a73]">Guardar</button>
+        <button type="button" id="cancelarForm" class="bg-gray-300 px-6 py-2 rounded">Cancelar</button>
+      </div>
+      <div id="formMessage" class="mt-2 text-sm"></div>
+    </form>
+
+    <!-- Modal para accionistas (FUERA del formulario) -->
+    <div id="modalAccionista" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden" style="z-index: 999;">
+      <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <h3 id="modalTitle" class="text-xl font-bold text-[#0b3b5b] mb-4">Agregar Accionista</h3>
+        <input type="hidden" id="accionistaId" value="0">
+        <div class="space-y-3">
+          <div>
+            <label class="block text-gray-700">Nombre completo:</label>
+            <input type="text" id="accNombre" class="w-full border rounded px-3 py-2" required>
+          </div>
+          <div>
+            <label class="block text-gray-700">CURP:</label>
+            <input type="text" id="accCurp" class="w-full border rounded px-3 py-2" maxlength="18" required>
+          </div>
+          <div>
+            <label class="block text-gray-700">Número de INE:</label>
+            <input type="text" id="accIne" class="w-full border rounded px-3 py-2" maxlength="18" required>
+          </div>
+          <div>
+            <label class="block text-gray-700">Fecha de alta:</label>
+            <input type="date" id="accFechaAlta" class="w-full border rounded px-3 py-2" required>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+          <button type="button" id="btnCerrarModal" class="px-4 py-2 border rounded hover:bg-gray-100">Cancelar</button>
+          <button type="button" id="btnGuardarAccionista" class="px-4 py-2 bg-[#0b3b5b] text-white rounded hover:bg-[#0f4a73]">Guardar</button>
+        </div>
       </div>
     </div>
+  </div>
+
+  <!-- Contenedor para otros roles (Alta General) - sin cambios -->
+  <div id="general-section" style="display: none;">
+    <form id="generalForm" class="space-y-4">
+      <!-- ... mismo contenido que en la versión original ... -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label>RFC:</label><input type="text" name="rfc" class="w-full border p-2 rounded" required></div>
+        <div><label>Razón Social:</label><input type="text" name="razon_social" class="w-full border p-2 rounded" required></div>
+        <div><label>Régimen Fiscal:</label><input type="text" name="regimen_fiscal" class="w-full border p-2 rounded" required></div>
+        <div><label>Vialidad:</label><input type="text" name="nombre_vialidad" class="w-full border p-2 rounded"></div>
+        <div><label>Núm. Exterior:</label><input type="text" name="num_exterior" class="w-full border p-2 rounded"></div>
+        <div><label>Núm. Interior:</label><input type="text" name="num_interior" class="w-full border p-2 rounded"></div>
+        <div><label>Colonia:</label><input type="text" name="colonia" class="w-full border p-2 rounded"></div>
+        <div><label>Localidad:</label><input type="text" name="localidad" class="w-full border p-2 rounded"></div>
+        <div><label>Código Postal:</label><input type="text" name="codigo_postal" class="w-full border p-2 rounded"></div>
+        <div><label>Ciudad:</label><input type="text" name="ciudad" class="w-full border p-2 rounded"></div>
+        <div><label>Estado:</label><input type="text" name="estado" class="w-full border p-2 rounded"></div>
+        <div><label>Teléfono:</label><input type="text" name="telefono" class="w-full border p-2 rounded"></div>
+        <div><label>Extensión:</label><input type="text" name="extension" class="w-full border p-2 rounded"></div>
+        <div><label>Fax:</label><input type="text" name="fax" class="w-full border p-2 rounded"></div>
+        <div><label>Ext. Fax:</label><input type="text" name="fax_extension" class="w-full border p-2 rounded"></div>
+        <div><label>Representante Legal:</label><input type="text" name="representante_legal" class="w-full border p-2 rounded"></div>
+        <div><label>Email:</label><input type="email" name="email" class="w-full border p-2 rounded" required></div>
+        <div><label>Banco:</label><input type="text" name="banco" class="w-full border p-2 rounded"></div>
+        <div><label>Sucursal Bancaria:</label><input type="text" name="sucursal_bancaria" class="w-full border p-2 rounded"></div>
+        <div><label>Cuenta:</label><input type="text" name="cuenta_bancaria" class="w-full border p-2 rounded"></div>
+        <div><label>CLABE:</label><input type="text" name="clabe_interbancaria" class="w-full border p-2 rounded"></div>
+      </div>
+      <button type="submit" class="bg-[#0b3b5b] text-white px-6 py-2 rounded">Guardar Alta General</button>
+      <div id="generalMessage" class="mt-2 text-sm"></div>
+    </form>
   </div>
 </div>
