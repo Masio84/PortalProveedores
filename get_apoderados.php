@@ -15,16 +15,17 @@ if (!$proveedor_id) {
 }
 
 $conn = getConnection();
-$sql = "SELECT id, nombre_completo, curp, ine, fecha_alta, fecha_baja, porcentaje_participacion  FROM accionistas WHERE proveedor_id = ? ORDER BY id";
+$sql = "SELECT id, nombre_completo, curp, ine, fecha_alta, fecha_baja FROM apoderados_legales WHERE proveedor_id = ? ORDER BY id";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $proveedor_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
-$accionistas = [];
+$apoderados = [];
 while ($row = $result->fetch_assoc()) {
-    $accionistas[] = $row;
+    $apoderados[] = $row;
 }
-echo json_encode(['success' => true, 'data' => $accionistas]);
+echo json_encode(['success' => true, 'data' => $apoderados]);
 $stmt->close();
 $conn->close();
+?>
