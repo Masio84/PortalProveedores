@@ -40,9 +40,7 @@ foreach ($campos_base as $campo) {
 }
 
 // Campos específicos
-if ($tipo_proveedor === 'fisica_empresarial') {
-    $data['actividades'] = $_POST['actividades'] ?? null;
-} elseif ($tipo_proveedor === 'moral') {
+if ($tipo_proveedor === 'moral') {
     $data['objeto_social'] = $_POST['objeto_social'] ?? null;
     $data['num_acta_constitutiva'] = $_POST['num_acta_constitutiva'] ?? null;
     $data['fecha_acta_constitutiva'] = !empty($_POST['fecha_acta_constitutiva']) ? $_POST['fecha_acta_constitutiva'] : null;

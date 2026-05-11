@@ -300,10 +300,9 @@ if (tipo === 'fisica_empresarial' || tipo === 'moral') {
         });
 
         // Generar campos de actividades
-        document.getElementById('generarActividades').addEventListener('click', () => {
-            const num = parseInt(document.getElementById('numActividades').value) || 0;
-            generarTablaActividades(num);
-        });
+       document.getElementById('generarActividades').addEventListener('click', () => {
+    generarTablaActividades([], false); // false = agregar filas al final
+});
 
         // Envío del formulario principal
         proveedorForm.addEventListener('submit', async (e) => {
@@ -664,50 +663,61 @@ async function cargarActividadesExistentes(proveedorId) {
     try {
         const resp = await fetch(`get_actividades.php?proveedor_id=${proveedorId}`);
         const data = await resp.json();
-        if (data.success && data.data.length > 0) {
-            document.getElementById('numActividades').value = data.data.length;
-            generarTablaActividades(data.data.length, data.data);
+        if (data.success) {
+            // Reemplaza completamente la tabla con los datos existentes
+            generarTablaActividades(data.data, true);  // true = reemplazar
         } else {
-            document.getElementById('numActividades').value = 0;
-            generarTablaActividades(0);
+            generarTablaActividades([], true); // tabla vacía
         }
     } catch (e) { console.error(e); }
 }
 
-function generarTablaActividades(num, datos = []) {
+function generarTablaActividades(datos, reemplazar = true) {
     const container = document.getElementById('actividadesContainer');
-    if (num <= 0) {
-        container.innerHTML = '<p class="text-gray-500">No hay actividades registradas.</p>';
-        return;
+    const tbodyId = 'actividadesTbody';
+    
+    // Crear estructura de tabla si no existe
+    if (reemplazar || !document.getElementById(tbodyId)) {
+        container.innerHTML = `
+            <table class="min-w-full border text-sm">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="border p-2">Actividad</th>
+                        <th class="border p-2">%</th>
+                        <th class="border p-2">Fecha Inicio</th>
+                        <th class="border p-2">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="${tbodyId}"></tbody>
+            </table>
+        `;
     }
-    let html = `<table class="min-w-full border text-sm">
-        <thead class="bg-gray-100">
-            <tr>
-                <th class="border p-2">Actividad</th>
-                <th class="border p-2">%</th>
-                <th class="border p-2">Fecha Inicio</th>
-                <th class="border p-2">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>`;
-    for (let i = 0; i < num; i++) {
-        const act = datos[i] || {};
-        // Se requiere el ID para poder eliminar; si es nuevo se deja vacío
-        const id = act.id || 0;
-        html += `<tr data-id="${id}">
-            <td class="border p-1">
-                <input type="text" name="actividad[]" value="${act.actividad || ''}" class="w-full border rounded px-2 py-1" required>
-                <input type="hidden" name="actividad_id[]" value="${id}">
-            </td>
-            <td class="border p-1"><input type="number" step="0.01" min="0" max="100" name="porcentaje[]" value="${act.porcentaje || ''}" class="w-full border rounded px-2 py-1"></td>
-            <td class="border p-1"><input type="date" name="fecha_inicio[]" value="${act.fecha_inicio || ''}" class="w-full border rounded px-2 py-1" required></td>
-            <td class="border p-1 text-center">
-                ${id > 0 ? `<button type="button" onclick="eliminarActividad(${id})" class="text-red-600 hover:underline"><i class="fas fa-trash-alt"></i> Eliminar</button>` : '-'}
-            </td>
-        </tr>`;
+    
+    const tbody = document.getElementById(tbodyId);
+    
+    if (reemplazar) {
+        tbody.innerHTML = ''; // limpiar
+        datos.forEach(act => agregarFilaActividad(tbody, act));
+    } else {
+        // Agregar filas vacías (tantas como indique el usuario)
+        const num = parseInt(document.getElementById('numActividades').value) || 1;
+        for (let i = 0; i < num; i++) {
+            agregarFilaActividad(tbody, { id: 0, actividad: '', porcentaje: '', fecha_inicio: '' });
+        }
     }
-    html += '</tbody></table>';
-    container.innerHTML = html;
+}
+
+function agregarFilaActividad(tbody, act) {
+    const row = tbody.insertRow();
+    row.setAttribute('data-id', act.id || 0);
+    row.innerHTML = `
+        <td class="border p-1"><input type="text" name="actividad[]" value="${escapeHtml(act.actividad || '')}" class="w-full border rounded px-2 py-1" required></td>
+        <td class="border p-1"><input type="number" step="0.01" min="0" max="100" name="porcentaje[]" value="${act.porcentaje || ''}" class="w-full border rounded px-2 py-1"></td>
+        <td class="border p-1"><input type="date" name="fecha_inicio[]" value="${act.fecha_inicio || ''}" class="w-full border rounded px-2 py-1" required></td>
+        <td class="border p-1 text-center">
+            ${act.id ? `<button type="button" onclick="eliminarActividad(${act.id})" class="text-red-600 hover:underline"><i class="fas fa-trash-alt"></i> Eliminar</button>` : '<span class="text-gray-400">Nuevo</span>'}
+        </td>
+    `;
 }
 
 window.eliminarActividad = async function(id) {
@@ -716,20 +726,30 @@ window.eliminarActividad = async function(id) {
         alert('Primero guarda los datos generales del proveedor');
         return;
     }
-    const formData = new FormData();
-    formData.append('id', id);
-    formData.append('proveedor_id', proveedorIdActual);
-    try {
-        const resp = await fetch('delete_actividad.php', { method: 'POST', body: formData });
-        const data = await resp.json();
-        if (data.success) {
-            cargarActividadesExistentes(proveedorIdActual); // Recargar tabla actualizada
-        } else {
-            alert(data.message);
+    
+    const row = document.querySelector(`#actividadesContainer tbody tr[data-id='${id}']`);
+    if (row) {
+        // Si es una fila nueva (id 0), solo la quitamos del DOM
+        if (id === 0) {
+            row.remove();
+            return;
         }
-    } catch (e) {
-        console.error(e);
-        alert('Error de conexión al eliminar la actividad');
+        // Si tiene ID real, llamamos al servidor
+        const formData = new FormData();
+        formData.append('id', id);
+        formData.append('proveedor_id', proveedorIdActual);
+        try {
+            const resp = await fetch('delete_actividad.php', { method: 'POST', body: formData });
+            const data = await resp.json();
+            if (data.success) {
+                row.remove();
+            } else {
+                alert(data.message);
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error de conexión al eliminar la actividad');
+        }
     }
 };
 
@@ -855,10 +875,7 @@ function generarCamposFisica() {
     return `
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             ${campoBaseHTML()}
-            <div class="md:col-span-2">
-                <label class="block text-gray-700 font-medium mb-1">Actividades:</label>
-                <textarea name="actividades" class="w-full border p-2 rounded" rows="3" placeholder="Describe las actividades empresariales..."></textarea>
-            </div>
+            
         </div>
     `;
 }
