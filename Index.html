@@ -24,7 +24,20 @@
     <p style="margin-top: 0.5rem; font-size: 0.8rem;">Módulo Sourcing · Diseño apegado a imagen oficial</p>
   </footer>
 
-  <script src="./Scripts/script.js"></script>
+  <!-- Scripts refactorizados por responsabilidad -->
+  <script src="./Scripts/core/state.js"></script>
+  <script src="./Scripts/core/utils.js"></script>
+  <script src="./Scripts/core/navigation.js"></script>
+  <script src="./Scripts/core/router.js"></script>
+
+  <script src="./Scripts/modules/campos_proveedor.js"></script>
+  <script src="./Scripts/modules/actividades.js"></script>
+  <script src="./Scripts/modules/accionistas.js"></script>
+  <script src="./Scripts/modules/apoderados.js"></script>
+  <script src="./Scripts/modules/proveedor.js"></script>
+  <script src="./Scripts/modules/concierge.js"></script>
+
+  <script src="./Scripts/app.js"></script>
 
 <script>
   tailwind.config = {

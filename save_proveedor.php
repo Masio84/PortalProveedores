@@ -31,12 +31,15 @@ $campos_base = [
     'rfc', 'razon_social', 'regimen_fiscal', 'nombre_vialidad', 'num_exterior',
     'num_interior', 'colonia', 'localidad', 'codigo_postal', 'ciudad', 'estado',
     'telefono', 'extension', 'fax', 'fax_extension', 'representante_legal',
-    'email', 'banco', 'sucursal_bancaria', 'cuenta_bancaria', 'clabe_interbancaria'
+    'email', 'banco', 'sucursal_bancaria', 'cuenta_bancaria', 'clabe_interbancaria',
+    'nombre_comercial', 'descripcion_actividad', 'palabras_clave',
+    'categoria_nivel_1', 'categoria_nivel_2', 'categoria_nivel_3'
 ];
 
 $data = [];
 foreach ($campos_base as $campo) {
-    $data[$campo] = $_POST[$campo] ?? null;
+    $valor = $_POST[$campo] ?? null;
+    $data[$campo] = ($valor === '') ? null : $valor;
 }
 
 // Campos específicos
@@ -57,6 +60,14 @@ if ($tipo_proveedor === 'moral') {
     $data['poder_notarial_folio'] = $_POST['poder_notarial_folio'] ?? null;
     $data['poder_notarial_fecha_registro'] = !empty($_POST['poder_notarial_fecha_registro']) ? $_POST['poder_notarial_fecha_registro'] : null;
     $data['apoderados'] = $_POST['apoderados'] ?? null;
+}
+
+
+// Normalizar categorías vacías a NULL
+foreach (['categoria_nivel_1', 'categoria_nivel_2', 'categoria_nivel_3'] as $campoCategoria) {
+    if (empty($data[$campoCategoria])) {
+        $data[$campoCategoria] = null;
+    }
 }
 
 $conn = getConnection();
@@ -100,7 +111,7 @@ if ($exists) {
 if ($stmt->execute()) {
     echo json_encode(['success' => true, 'message' => $exists ? 'Datos actualizados correctamente' : 'Datos guardados correctamente']);
 } else {
-    echo json_encode(['success' => false, 'message' => 'Error al guardar: ' . $conn->error]);
+    echo json_encode(['success' => false, 'message' => 'Error al guardar: ' . $stmt->error]);
 }
 
 $stmt->close();

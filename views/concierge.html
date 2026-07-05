@@ -1,0 +1,79 @@
+<div class="bg-white rounded-lg shadow p-6">
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-[#0b3b5b] mb-2">Concierge</h2>
+    <p class="text-gray-600">
+      Busca usuarios registrados por categoría, razón social, nombre comercial, descripción de actividad o palabras clave.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+    <div>
+      <label class="block text-gray-700 font-medium mb-2">1er nivel</label>
+      <select id="categoriaNivel1" class="w-full border rounded px-3 py-2">
+        <option value="">-- Selecciona el primer nivel --</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-gray-700 font-medium mb-2">2do nivel</label>
+      <select id="categoriaNivel2" class="w-full border rounded px-3 py-2" disabled>
+        <option value="">-- Selecciona el segundo nivel --</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-gray-700 font-medium mb-2">3er nivel</label>
+      <select id="categoriaNivel3" class="w-full border rounded px-3 py-2" disabled>
+        <option value="">-- Selecciona el tercer nivel --</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <label class="block text-gray-700 font-medium mb-2">Buscar proveedor, servicio o palabra clave</label>
+    <div class="flex flex-col md:flex-row gap-3">
+      <input
+        type="text"
+        id="busquedaConcierge"
+        class="w-full border rounded px-3 py-2"
+        placeholder="Ejemplo: software, limpieza, medicamentos, mantenimiento, equipo de cómputo"
+      />
+      <button
+        type="button"
+        id="btnBuscarConcierge"
+        class="bg-[#0b3b5b] text-white px-6 py-2 rounded hover:bg-[#0f4a73]"
+      >
+        <i class="fas fa-search"></i> Buscar
+      </button>
+      <button
+        type="button"
+        id="btnLimpiarConcierge"
+        class="bg-gray-200 px-6 py-2 rounded hover:bg-gray-300"
+      >
+        Limpiar
+      </button>
+    </div>
+  </div>
+
+  <div id="conciergeMensaje" class="text-sm mb-4"></div>
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full border text-sm">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="border p-2 text-left">Usuario / proveedor</th>
+          <th class="border p-2 text-left">Actividad</th>
+          <th class="border p-2 text-left">Categoría</th>
+          <th class="border p-2 text-left">Contacto</th>
+        </tr>
+      </thead>
+      <tbody id="tablaResultadosConcierge">
+        <tr>
+          <td colspan="4" class="border p-4 text-center text-gray-500">
+            Selecciona una categoría o escribe una búsqueda para encontrar usuarios registrados.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

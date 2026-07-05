@@ -9,28 +9,15 @@
             <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 7h14M5 12h14M5 17h10"/>
           </svg>
         </button>
-       <a href="#" id="logoLink" class="flex ms-2 md:me-24 items-center">
-    <img src="./Images/Portal_Gestion.png" class="h-8 me-3" alt="Logo CDMX" />
-</a>
+        <a href="#" id="logoLink" class="flex ms-2 md:me-24 items-center">
+          <img src="./Images/Portal_Gestion.png" class="h-8 me-3" alt="Logo CDMX" />
+        </a>
       </div>
       <div class="flex items-center">
-        <div class="flex items-center ms-3">
-          <div>
-            <button type="button" id="dropdownUserButton" class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300" aria-expanded="false" data-dropdown-toggle="dropdown-user">              <span class="sr-only">Abrir menú usuario</span>
-              <img class="w-8 h-8 rounded-full" id="userAvatar" src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="Foto de perfil">
-            </button>
-          </div>
-          <div class="z-50 hidden bg-white border border-default-medium rounded-base shadow-lg w-44" id="dropdown-user">
-            <div class="px-4 py-3 border-b border-default-medium" role="none">
-              <p class="text-sm font-medium text-heading" id="dropdownUserName" role="none">Cargando...</p>
-              <p class="text-sm text-body truncate" id="dropdownUserEmail" role="none">cargando@ejemplo.com</p>
-            </div>
-            <ul class="p-2 text-sm text-body font-medium" role="none">
-              <li>
-                <a href="#" id="logoutLink" class="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded" role="menuitem">Cerrar sesión</a>
-              </li>
-            </ul>
-          </div>
+        <!-- Solo mostramos el correo del usuario, sin dropdown -->
+        <div class="text-sm text-gray-700">
+          <i class="fas fa-user-circle mr-1"></i>
+          <span id="topUserEmail">Cargando...</span>
         </div>
       </div>
     </div>
@@ -48,7 +35,7 @@
       <!-- Los módulos se inyectan aquí con JS -->
     </ul>
 
-    <!-- Información del usuario (estática) -->
+    <!-- Información del usuario (opcional, puede mostrar rol) -->
     <div class="mt-6 pt-4 border-t border-default">
       <div id="infoUsuario" class="proveedor-tag">
         <i class="fas fa-user-circle"></i> Cargando...

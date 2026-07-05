@@ -221,6 +221,37 @@
             required
           />
         </div>
+
+        <div>
+          <label>Nombre comercial:</label>
+          <input type="text" name="nombre_comercial" class="w-full border p-2 rounded" placeholder="Nombre público o comercial" />
+        </div>
+        <div class="md:col-span-2">
+          <label>Descripción de actividad / servicios:</label>
+          <textarea name="descripcion_actividad" class="w-full border p-2 rounded" rows="3" placeholder="Describe lo que ofrece tu institución o empresa"></textarea>
+        </div>
+        <div class="md:col-span-2">
+          <label>Palabras clave:</label>
+          <input type="text" name="palabras_clave" class="w-full border p-2 rounded" placeholder="Ej: software, mantenimiento, medicamentos" />
+        </div>
+        <div>
+          <label>Categoría Concierge - 1er nivel:</label>
+          <select name="categoria_nivel_1" data-cat-nivel="1" class="w-full border p-2 rounded">
+            <option value="">-- Selecciona --</option>
+          </select>
+        </div>
+        <div>
+          <label>Categoría Concierge - 2do nivel:</label>
+          <select name="categoria_nivel_2" data-cat-nivel="2" class="w-full border p-2 rounded" disabled>
+            <option value="">-- Selecciona --</option>
+          </select>
+        </div>
+        <div>
+          <label>Categoría Concierge - 3er nivel:</label>
+          <select name="categoria_nivel_3" data-cat-nivel="3" class="w-full border p-2 rounded" disabled>
+            <option value="">-- Selecciona --</option>
+          </select>
+        </div>
         <div>
           <label>Régimen Fiscal:</label
           ><input
