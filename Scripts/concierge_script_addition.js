@@ -16,8 +16,10 @@ async function inicializarConcierge() {
     if (!nivel1 || !nivel2 || !nivel3 || !tabla) return;
 
     function mostrarMensajeConcierge(texto, tipo = 'info') {
-        mensaje.textContent = texto;
-        mensaje.className = tipo === 'error' ? 'text-sm mb-4 text-red-600' : 'text-sm mb-4 text-gray-600';
+        mensaje.textContent = texto || '';
+        mensaje.className = tipo === 'error'
+            ? 'text-sm mb-4 text-red-600'
+            : 'text-sm mb-4 text-gray-600';
     }
 
     function optionDefault(texto) {
@@ -26,32 +28,39 @@ async function inicializarConcierge() {
 
     function llenarSelect(select, datos, textoDefault) {
         select.innerHTML = optionDefault(textoDefault);
+
         datos.forEach(item => {
             const option = document.createElement('option');
-            option.value = item.id;
+
+            option.value = item.codigo || item.id;
             option.textContent = `${item.codigo} - ${item.nombre}`;
+
             select.appendChild(option);
         });
     }
 
-    async function cargarCategorias(nivel, parentId = 0) {
+    async function cargarCategorias(nivel, parentId = '') {
         const resp = await fetch(`get_categorias_concierge.php?nivel=${nivel}&parent_id=${parentId}`);
         const data = await resp.json();
-        if (!data.success) throw new Error(data.message || 'Error al cargar categorías');
+
+        if (!data.success) {
+            throw new Error(data.message || 'Error al cargar categorías');
+        }
+
         return data.data;
     }
 
     async function buscarConcierge() {
         const params = new URLSearchParams({
-            nivel1: nivel1.value || '0',
-            nivel2: nivel2.value || '0',
-            nivel3: nivel3.value || '0',
+            nivel1: nivel1.value || '',
+            nivel2: nivel2.value || '',
+            nivel3: nivel3.value || '',
             q: inputBusqueda.value.trim()
         });
 
         tabla.innerHTML = `
             <tr>
-                <td colspan="3" class="border p-4 text-center text-gray-500">
+                <td colspan="4" class="border p-4 text-center text-gray-500">
                     Buscando...
                 </td>
             </tr>
@@ -66,10 +75,10 @@ async function inicializarConcierge() {
                 return;
             }
 
-            if (!data.data.length) {
+            if (!data.data || !data.data.length) {
                 tabla.innerHTML = `
                     <tr>
-                        <td colspan="3" class="border p-4 text-center text-gray-500">
+                        <td colspan="4" class="border p-4 text-center text-gray-500">
                             No se encontraron resultados.
                         </td>
                     </tr>
@@ -78,27 +87,77 @@ async function inicializarConcierge() {
                 return;
             }
 
-            tabla.innerHTML = data.data.map(row => `
-                <tr>
-                    <td class="border p-2 align-top">
-                        <strong>${escapeHtml(row.nivel_1_codigo)}</strong><br>
-                        ${escapeHtml(row.nivel_1_nombre)}
-                    </td>
-                    <td class="border p-2 align-top">
-                        <strong>${escapeHtml(row.nivel_2_codigo)}</strong><br>
-                        ${escapeHtml(row.nivel_2_nombre)}
-                    </td>
-                    <td class="border p-2 align-top">
-                        <strong>${escapeHtml(row.nivel_3_codigo)}</strong><br>
-                        ${escapeHtml(row.nivel_3_nombre)}
-                    </td>
-                </tr>
-            `).join('');
+            tabla.innerHTML = data.data.map(row => {
+                const nombreProveedor =
+                    row.nombre_comercial ||
+                    row.razon_social ||
+                    'Sin nombre registrado';
+
+                const razonSocial = row.razon_social || '';
+
+                const rolTipo = [
+                    row.rol || '',
+                    row.tipo_proveedor || ''
+                ].filter(Boolean).join(' · ');
+
+                const actividad =
+                    row.descripcion_actividad ||
+                    'Sin descripción registrada';
+
+                const palabrasClave = row.palabras_clave
+                    ? `<div class="text-xs text-gray-500 mt-1">${escapeHtml(row.palabras_clave)}</div>`
+                    : '';
+
+                const partesCategoria = [];
+
+                if (row.nivel1_codigo && row.nivel1_nombre) {
+                    partesCategoria.push(`${row.nivel1_codigo} - ${row.nivel1_nombre}`);
+                }
+
+                if (row.nivel2_codigo && row.nivel2_nombre) {
+                    partesCategoria.push(`${row.nivel2_codigo} - ${row.nivel2_nombre}`);
+                }
+
+                if (row.nivel3_codigo && row.nivel3_nombre) {
+                    partesCategoria.push(`${row.nivel3_codigo} - ${row.nivel3_nombre}`);
+                }
+
+                const categoria = partesCategoria.length
+                    ? partesCategoria.map(escapeHtml).join('<br>')
+                    : 'Sin categoría';
+
+                const correo = row.email || row.correo || 'Sin correo';
+                const telefono = row.telefono || 'Sin teléfono';
+
+                return `
+                    <tr>
+                        <td class="border p-2 align-top">
+                            <strong>${escapeHtml(nombreProveedor)}</strong><br>
+                            <span class="text-gray-600">${escapeHtml(razonSocial)}</span><br>
+                            <span class="text-xs text-gray-500">${escapeHtml(rolTipo)}</span>
+                        </td>
+
+                        <td class="border p-2 align-top">
+                            ${escapeHtml(actividad)}
+                            ${palabrasClave}
+                        </td>
+
+                        <td class="border p-2 align-top">
+                            ${categoria}
+                        </td>
+
+                        <td class="border p-2 align-top">
+                            ${escapeHtml(correo)}<br>
+                            <span class="text-gray-600">${escapeHtml(telefono)}</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
 
             mostrarMensajeConcierge(`${data.data.length} resultado(s) encontrado(s).`);
         } catch (error) {
             console.error(error);
-            mostrarMensajeConcierge('Error de conexión al buscar categorías.', 'error');
+            mostrarMensajeConcierge('Error de conexión al buscar proveedores.', 'error');
         }
     }
 
@@ -151,25 +210,46 @@ async function inicializarConcierge() {
     });
 
     nivel3.addEventListener('change', buscarConcierge);
-    btnBuscar.addEventListener('click', buscarConcierge);
-    inputBusqueda.addEventListener('keyup', (e) => {
-        if (e.key === 'Enter') buscarConcierge();
-    });
 
-    btnLimpiar.addEventListener('click', () => {
-        nivel1.value = '';
-        nivel2.innerHTML = optionDefault('-- Selecciona el segundo nivel --');
-        nivel3.innerHTML = optionDefault('-- Selecciona el tercer nivel --');
-        nivel2.disabled = true;
-        nivel3.disabled = true;
-        inputBusqueda.value = '';
-        tabla.innerHTML = `
-            <tr>
-                <td colspan="3" class="border p-4 text-center text-gray-500">
-                    Selecciona una categoría o escribe una búsqueda.
-                </td>
-            </tr>
-        `;
-        mostrarMensajeConcierge('');
-    });
+    if (btnBuscar) {
+        btnBuscar.addEventListener('click', buscarConcierge);
+    }
+
+    if (inputBusqueda) {
+        inputBusqueda.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') buscarConcierge();
+        });
+    }
+
+    if (btnLimpiar) {
+        btnLimpiar.addEventListener('click', () => {
+            nivel1.value = '';
+            nivel2.innerHTML = optionDefault('-- Selecciona el segundo nivel --');
+            nivel3.innerHTML = optionDefault('-- Selecciona el tercer nivel --');
+            nivel2.disabled = true;
+            nivel3.disabled = true;
+            inputBusqueda.value = '';
+
+            tabla.innerHTML = `
+                <tr>
+                    <td colspan="4" class="border p-4 text-center text-gray-500">
+                        Selecciona una categoría o escribe una búsqueda.
+                    </td>
+                </tr>
+            `;
+
+            mostrarMensajeConcierge('');
+        });
+    }
+}
+
+function escapeHtml(value) {
+    if (value === null || value === undefined) return '';
+
+    return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
 }
