@@ -33,6 +33,19 @@ if ($porcentaje < 0 || $porcentaje > 100) {
 
 $conn = getConnection();
 
+$user_id = $_SESSION['user_id'];
+$sqlCheckOwner = "SELECT id FROM proveedores WHERE id = ? AND user_id = ?";
+$stmtOwner = $conn->prepare($sqlCheckOwner);
+$stmtOwner->bind_param("ii", $proveedor_id, $user_id);
+$stmtOwner->execute();
+if ($stmtOwner->get_result()->num_rows === 0) {
+    echo json_encode(['success' => false, 'message' => 'Proveedor no autorizado o inexistente']);
+    $stmtOwner->close();
+    $conn->close();
+    exit;
+}
+$stmtOwner->close();
+
 // Verificar unicidad de CURP e INE solo en registros ACTIVOS (sin fecha_baja)
 $sqlCheck = "SELECT id FROM accionistas WHERE (curp = ? OR ine = ?) AND fecha_baja IS NULL";
 $params = [$curp, $ine];

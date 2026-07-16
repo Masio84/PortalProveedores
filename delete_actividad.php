@@ -12,6 +12,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     exit;
 }
 
+$user_id = $_SESSION['user_id'];
 $id = intval($_POST['id'] ?? 0);
 $proveedor_id = intval($_POST['proveedor_id'] ?? 0);
 if (!$id || !$proveedor_id) {
@@ -21,10 +22,12 @@ if (!$id || !$proveedor_id) {
 
 $conn = getConnection();
 
-// Verificar que la actividad pertenezca al proveedor indicado
-$sqlCheck = "SELECT id FROM actividades_economicas WHERE id = ? AND proveedor_id = ?";
+// Verificar que la actividad pertenezca al proveedor indicado y que el proveedor pertenezca al usuario en sesión
+$sqlCheck = "SELECT ae.id FROM actividades_economicas ae 
+             INNER JOIN proveedores p ON ae.proveedor_id = p.id 
+             WHERE ae.id = ? AND ae.proveedor_id = ? AND p.user_id = ?";
 $stmtCheck = $conn->prepare($sqlCheck);
-$stmtCheck->bind_param("ii", $id, $proveedor_id);
+$stmtCheck->bind_param("iii", $id, $proveedor_id, $user_id);
 $stmtCheck->execute();
 $resultCheck = $stmtCheck->get_result();
 if ($resultCheck->num_rows === 0) {

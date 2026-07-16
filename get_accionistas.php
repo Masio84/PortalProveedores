@@ -14,10 +14,16 @@ if (!$proveedor_id) {
     exit;
 }
 
+$user_id = $_SESSION['user_id'];
+
 $conn = getConnection();
-$sql = "SELECT id, nombre_completo, curp, ine, fecha_alta, fecha_baja, porcentaje_participacion  FROM accionistas WHERE proveedor_id = ? ORDER BY id";
+$sql = "SELECT a.id, a.nombre_completo, a.curp, a.ine, a.fecha_alta, a.fecha_baja, a.porcentaje_participacion 
+        FROM accionistas a 
+        INNER JOIN proveedores p ON a.proveedor_id = p.id 
+        WHERE a.proveedor_id = ? AND p.user_id = ? 
+        ORDER BY a.id";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $proveedor_id);
+$stmt->bind_param("ii", $proveedor_id, $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 

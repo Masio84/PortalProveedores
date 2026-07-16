@@ -12,6 +12,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     exit;
 }
 
+$user_id = $_SESSION['user_id'];
 $id = $_POST['id'] ?? 0;
 if (!$id) {
     echo json_encode(['success' => false, 'message' => 'ID requerido']);
@@ -19,9 +20,12 @@ if (!$id) {
 }
 
 $conn = getConnection();
-$sql = "UPDATE accionistas SET fecha_baja = CURDATE() WHERE id = ?";
+$sql = "UPDATE accionistas a 
+        INNER JOIN proveedores p ON a.proveedor_id = p.id 
+        SET a.fecha_baja = CURDATE() 
+        WHERE a.id = ? AND p.user_id = ?";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $id);
+$stmt->bind_param("ii", $id, $user_id);
 if ($stmt->execute()) {
     echo json_encode(['success' => true, 'message' => 'Accionista dado de baja']);
 } else {
