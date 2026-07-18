@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portal Maestro de Contrataciones (Next.js 16 + Supabase)
 
-## Getting Started
+Este repositorio contiene la versión migrada del **Portal Maestro de Contrataciones** utilizando el stack tecnológico moderno de **Next.js 16 (App Router)**, **TypeScript**, **Tailwind CSS v4** y **Supabase** (PostgreSQL, Autenticación y RLS).
 
-First, run the development server:
+---
 
+## 🛠️ Requisitos e Instalación
+
+### 1. Clonar el repositorio y dependencias
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/Masio84/PortalProveedores.git
+cd PortalProveedores
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configurar variables de entorno
+Crea un archivo `.env.local` en la raíz del proyecto y define los datos de tu instancia de Supabase Cloud:
+```ini
+NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-public-key
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Iniciar el servidor local
+```bash
+npm run dev
+```
+Abre [http://localhost:3000](http://localhost:3000) en tu navegador para ver la aplicación local.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 📁 Estructura del Proyecto
 
-To learn more about Next.js, take a look at the following resources:
+* **`src/app/`**: Contiene los archivos de ruta con App Router.
+  * **`(auth)/`**: Rutas de autenticación (Login interactivo, Registro de roles y Recuperación).
+  * **`(dashboard)/`**: Secciones protegidas por sesión (Perfil del Proveedor, Buscador Concierge y fallbacks).
+  * **`actions/`**: Server Actions para mutaciones transaccionales y queries seguras.
+* **`src/components/`**: Componentes globales reutilizables (Sidebar responsivo, Header de sesión, transiciones animadas).
+* **`src/utils/supabase/`**: Clientes de Supabase para navegador y servidor (con lectura asíncrona de cookies).
+* **`sql/`**: Contiene `supabase_migration.sql` con todo el modelado de datos, triggers, índices GIN de búsqueda y políticas RLS.
+* **`legacy-php/`**: Carpeta que almacena los archivos del antiguo stack en PHP, MySQL y HTML para respaldo histórico.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🚀 Despliegue en Vercel
 
-## Deploy on Vercel
+1. Crea un nuevo proyecto en **Vercel** y conéctalo a este repositorio.
+2. Agrega las dos variables de entorno en la configuración del proyecto de Vercel (**Settings** -> **Environment Variables**):
+   * `NEXT_PUBLIC_SUPABASE_URL`
+   * `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+3. Vercel compilará y desplegará la aplicación automáticamente en cada `git push` a la rama `main`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🔒 Base de Datos y Seguridad (Supabase)
+
+El esquema de base de datos incluye políticas de **Row Level Security (RLS)** que limitan la lectura/escritura de datos:
+* Los **Ofertantes** solo pueden modificar sus propios perfiles, accionistas, apoderados legales y actividades económicas.
+* Las **Instituciones Públicas** y **Privadas** tienen permisos de lectura para consultar y filtrar los perfiles de todos los proveedores registrados mediante el módulo Concierge.
+* El registro de usuarios de Supabase Auth sincroniza automáticamente a los usuarios registrados con la tabla pública `public.usuarios` mediante triggers de PostgreSQL.
