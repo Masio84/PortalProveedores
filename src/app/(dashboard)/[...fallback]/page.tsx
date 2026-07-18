@@ -40,10 +40,6 @@ export default async function FallbackPage({ params }: FallbackPageProps) {
             Módulo en construcción. Próximamente se integrarán las funcionalidades correspondientes para este apartado.
           </p>
         </div>
-        <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-[11px] text-slate-400 font-medium flex items-center justify-center gap-1.5">
-          <Info className="w-4 h-4 text-brand shrink-0" />
-          <span>Diseño alineado a la imagen oficial del Sourcing</span>
-        </div>
       </div>
     </div>
   )

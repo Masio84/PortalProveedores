@@ -234,7 +234,6 @@ export default function LoginPage() {
         {/* Footer del login */}
         <div className="text-center mt-8 text-xs text-white/70">
           <p>Portal Maestro de Contrataciones - Contrataciones abiertas y eficientes</p>
-          <p className="mt-1">Módulo Sourcing · Diseño premium adaptado a imagen oficial</p>
         </div>
 
       </div>

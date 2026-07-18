@@ -42,7 +42,6 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
         {/* Footer */}
         <footer className="bg-white border-t border-slate-100 py-6 px-8 text-center text-xs text-slate-400 font-medium">
           <p>Portal Maestro de Contrataciones - Contrataciones abiertas y eficientes</p>
-          <p className="mt-1">Módulo Sourcing · Diseño premium adaptado a imagen oficial</p>
         </footer>
 
       </div>
