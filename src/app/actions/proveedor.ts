@@ -2,6 +2,17 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
+import {
+  sanitizeText,
+  isValidEmail,
+  isValidTelefono,
+  isValidRFC,
+  isValidCURP,
+  isValidINE,
+  isValidCLABE,
+  isValidCP,
+  isValidPorcentaje
+} from '@/utils/validation'
 
 // Interfaces
 export interface ProveedorData {
@@ -113,13 +124,47 @@ export async function saveProveedor(tipo: 'fisica_empresarial' | 'moral' | 'gene
     return { success: false, error: 'No autenticado' }
   }
 
-  // Limpiar campos vacíos a null
+  // Limpiar campos vacíos a null y sanitizar
   const cleanedData: any = { ...data }
   Object.keys(cleanedData).forEach((key) => {
     if (cleanedData[key] === '') {
       cleanedData[key] = null
+    } else if (typeof cleanedData[key] === 'string') {
+      cleanedData[key] = sanitizeText(cleanedData[key])
     }
   })
+
+  // Validaciones estrictas
+  if (cleanedData.rfc) {
+    if (!isValidRFC(cleanedData.rfc)) {
+      return { success: false, error: 'Formato de RFC inválido (debe tener 12 o 13 caracteres estructurados)' }
+    }
+    cleanedData.rfc = cleanedData.rfc.toUpperCase()
+  }
+
+  if (cleanedData.email) {
+    if (!isValidEmail(cleanedData.email)) {
+      return { success: false, error: 'Formato de correo electrónico inválido' }
+    }
+  }
+
+  if (cleanedData.telefono) {
+    if (!isValidTelefono(cleanedData.telefono)) {
+      return { success: false, error: 'El teléfono debe tener exactamente 10 dígitos numéricos' }
+    }
+  }
+
+  if (cleanedData.clabe_interbancaria) {
+    if (!isValidCLABE(cleanedData.clabe_interbancaria)) {
+      return { success: false, error: 'La CLABE interbancaria debe tener exactamente 18 dígitos numéricos' }
+    }
+  }
+
+  if (cleanedData.codigo_postal) {
+    if (!isValidCP(cleanedData.codigo_postal)) {
+      return { success: false, error: 'El Código Postal debe tener exactamente 5 dígitos numéricos' }
+    }
+  }
 
   // Asegurar llaves consistentes
   cleanedData.user_id = user.id
@@ -182,12 +227,27 @@ export async function getAccionistas(proveedorId: number): Promise<AccionistaDat
 export async function saveAccionista(data: AccionistaData) {
   const supabase = await createClient()
 
+  // Sanitizar entradas
+  const nombre_completo = sanitizeText(data.nombre_completo)
+  const curp = sanitizeText(data.curp).toUpperCase()
+  const ine = sanitizeText(data.ine).toUpperCase()
+  const fecha_alta = sanitizeText(data.fecha_alta)
+  const porcentaje_participacion = Number(data.porcentaje_participacion)
+
   // Validaciones
-  if (!data.proveedor_id || !data.nombre_completo || !data.curp || !data.ine) {
+  if (!data.proveedor_id || !nombre_completo || !curp || !ine) {
     return { success: false, error: 'Todos los campos son obligatorios' }
   }
 
-  if (data.porcentaje_participacion < 0 || data.porcentaje_participacion > 100) {
+  if (!isValidCURP(curp)) {
+    return { success: false, error: 'Formato de CURP inválido (debe tener exactamente 18 caracteres estructurados)' }
+  }
+
+  if (!isValidINE(ine)) {
+    return { success: false, error: 'Formato de clave de elector INE inválido (debe tener exactamente 18 caracteres alfanuméricos)' }
+  }
+
+  if (!isValidPorcentaje(porcentaje_participacion)) {
     return { success: false, error: 'El porcentaje debe estar entre 0 y 100' }
   }
 
@@ -196,7 +256,7 @@ export async function saveAccionista(data: AccionistaData) {
     .from('accionistas')
     .select('id')
     .is('fecha_baja', null) // filter only active ones
-    .or(`curp.eq.${data.curp.toUpperCase()},ine.eq.${data.ine.toUpperCase()}`)
+    .or(`curp.eq.${curp},ine.eq.${ine}`)
 
   if (data.id) {
     query.neq('id', data.id)
@@ -211,11 +271,11 @@ export async function saveAccionista(data: AccionistaData) {
 
   const payload = {
     proveedor_id: data.proveedor_id,
-    nombre_completo: data.nombre_completo,
-    curp: data.curp.toUpperCase(),
-    ine: data.ine.toUpperCase(),
-    fecha_alta: data.fecha_alta,
-    porcentaje_participacion: Number(data.porcentaje_participacion)
+    nombre_completo,
+    curp,
+    ine,
+    fecha_alta: data.fecha_alta ? sanitizeText(data.fecha_alta) : null,
+    porcentaje_participacion
   }
 
   let result
@@ -277,16 +337,30 @@ export async function getApoderados(proveedorId: number): Promise<ApoderadoData[
 export async function saveApoderado(data: ApoderadoData) {
   const supabase = await createClient()
 
-  if (!data.proveedor_id || !data.nombre_completo || !data.curp || !data.ine) {
+  // Sanitizar entradas
+  const nombre_completo = sanitizeText(data.nombre_completo)
+  const curp = sanitizeText(data.curp).toUpperCase()
+  const ine = sanitizeText(data.ine).toUpperCase()
+  const fecha_alta = sanitizeText(data.fecha_alta)
+
+  if (!data.proveedor_id || !nombre_completo || !curp || !ine) {
     return { success: false, error: 'Todos los campos son obligatorios' }
+  }
+
+  if (!isValidCURP(curp)) {
+    return { success: false, error: 'Formato de CURP inválido (debe tener exactamente 18 caracteres estructurados)' }
+  }
+
+  if (!isValidINE(ine)) {
+    return { success: false, error: 'Formato de clave de elector INE inválido (debe tener exactamente 18 caracteres alfanuméricos)' }
   }
 
   const payload = {
     proveedor_id: data.proveedor_id,
-    nombre_completo: data.nombre_completo,
-    curp: data.curp.toUpperCase(),
-    ine: data.ine.toUpperCase(),
-    fecha_alta: data.fecha_alta
+    nombre_completo,
+    curp,
+    ine,
+    fecha_alta
   }
 
   let result
@@ -359,15 +433,25 @@ export async function saveActividades(proveedorId: number, actividades: Activida
     return { success: false, error: deleteError.message }
   }
 
-  // Filtrar vacíos
-  const validActs = actividades
-    .filter(act => act.actividad && act.actividad.trim() !== '' && act.fecha_inicio)
-    .map(act => ({
+  // Filtrar vacíos, sanitizar y validar
+  const validActs = []
+  for (const act of actividades) {
+    if (!act.actividad || act.actividad.trim() === '' || !act.fecha_inicio) continue
+
+    const actividadSanitized = sanitizeText(act.actividad)
+    const porcentajeNum = Number(act.porcentaje) || 0
+
+    if (!isValidPorcentaje(porcentajeNum)) {
+      return { success: false, error: 'El porcentaje de participación de cada actividad debe estar entre 0 y 100' }
+    }
+
+    validActs.push({
       proveedor_id: proveedorId,
-      actividad: act.actividad.trim(),
-      porcentaje: Number(act.porcentaje) || 0,
-      fecha_inicio: act.fecha_inicio
-    }))
+      actividad: actividadSanitized,
+      porcentaje: porcentajeNum,
+      fecha_inicio: sanitizeText(act.fecha_inicio)
+    })
+  }
 
   if (validActs.length === 0) {
     revalidatePath('/perfil')
