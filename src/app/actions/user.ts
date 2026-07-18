@@ -27,12 +27,18 @@ export async function getUserProfile(): Promise<UserProfile | null> {
       id,
       email,
       telefono,
-      roles (
+      roles:rol_id (
         nombre
       )
     `)
     .eq('id', user.id)
     .single()
+
+  console.log('DEBUG [getUserProfile] Query result:', {
+    userId: user.id,
+    profile,
+    profileError
+  });
 
   if (profileError || !profile) {
     console.error('Error fetching user profile:', profileError)

@@ -14,6 +14,7 @@ import {
   getActividades, saveActividades, ActividadData
 } from '@/app/actions/proveedor'
 import { getCategorias, Categoria } from '@/app/actions/categories'
+import { sileo } from 'sileo'
 
 export default function PerfilPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -373,18 +374,38 @@ export default function PerfilPage() {
         if (profile?.rol === 'Ofertante') {
           const actsRes = await saveActividades(res.proveedorId, actividades)
           if (!actsRes.success) {
-            setMessage({ type: 'error', text: `Proveedor guardado, pero falló guardar actividades: ${actsRes.error}` })
+            const errText = `Proveedor guardado, pero falló guardar actividades: ${actsRes.error}`
+            setMessage({ type: 'error', text: errText })
+            sileo.error({ 
+              title: 'Error de guardado', 
+              description: `Falló al guardar las actividades: ${actsRes.error}` 
+            })
             setSaveLoading(false)
             return
           }
         }
 
-        setMessage({ type: 'success', text: 'Perfil guardado correctamente en la base de datos de Supabase' })
+        const successText = 'Perfil guardado correctamente en el sistema'
+        setMessage({ type: 'success', text: successText })
+        sileo.success({ 
+          title: '¡Perfil guardado!', 
+          description: 'Los datos se actualizaron correctamente en tu ficha.' 
+        })
       } else {
-        setMessage({ type: 'error', text: res.error || 'Error al guardar el perfil' })
+        const errText = res.error || 'Error al guardar el perfil'
+        setMessage({ type: 'error', text: errText })
+        sileo.error({ 
+          title: 'Error de guardado', 
+          description: errText 
+        })
       }
     } catch (err) {
-      setMessage({ type: 'error', text: 'Error de red al procesar la solicitud' })
+      const errText = 'Error de red al procesar la solicitud'
+      setMessage({ type: 'error', text: errText })
+      sileo.error({ 
+        title: 'Error de red', 
+        description: 'No se pudo conectar con el servidor.' 
+      })
     } finally {
       setSaveLoading(false)
       window.scrollTo({ top: 0, behavior: 'smooth' })
